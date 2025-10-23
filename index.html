@@ -9,7 +9,7 @@
 <body id="mainBody">
     <!-- Mode Selection Screen -->
     <div class="mode-selection" id="modeSelection">
-        <div class="mode-container">
+        <div class="mode-container" id="modeContainer">
             <h1>🍓 Fruit Match 🍊</h1>
             <p class="subtitle">Choose Your Game Mode</p>
             
@@ -121,12 +121,17 @@
                         <div class="bg-preview bg-default4"></div>
                         <p>Forest Green</p>
                     </div>
+                    <div class="bg-option" onclick="selectBackground('default5')">
+                        <div class="bg-preview bg-default5"></div>
+                        <p>AMOLED Dark</p>
+                    </div>
                 </div>
             </div>
             
             <div class="bg-section">
                 <h3>Custom Background</h3>
                 <p class="bg-info">Upload your own image (supports up to 4K resolution)</p>
+                <p class="bg-info-detail">✨ Auto-transparent UI with high-contrast text</p>
                 <div class="custom-upload">
                     <input type="file" id="customBgInput" accept="image/*" style="display: none;">
                     <button class="upload-btn" onclick="document.getElementById('customBgInput').click()">
