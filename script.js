@@ -13,6 +13,7 @@ let soundEnabled = true;
 let musicEnabled = true;
 let customBackgroundData = null;
 let transparentMode = false;
+let extractedColors = null;
 
 // Swipe detection variables
 let touchStartX = 0;
@@ -41,6 +42,185 @@ const LEVEL_CONFIG = [
     { level: 9, moves: 14, target: 2300, difficulty: 'expert' },
     { level: 10, moves: 14, target: 2600, difficulty: 'expert' }
 ];
+
+// Color extraction functions
+function extractColorsFromImage(imgElement) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Resize for performance
+    const MAX_SIZE = 100;
+    let width = imgElement.width;
+    let height = imgElement.height;
+    
+    if (width > height) {
+        if (width > MAX_SIZE) {
+            height = height * (MAX_SIZE / width);
+            width = MAX_SIZE;
+        }
+    } else {
+        if (height > MAX_SIZE) {
+            width = width * (MAX_SIZE / height);
+            height = MAX_SIZE;
+        }
+    }
+    
+    canvas.width = width;
+    canvas.height = height;
+    
+    ctx.drawImage(imgElement, 0, 0, width, height);
+    
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const pixels = imageData.data;
+    const colorMap = {};
+    
+    // Count color frequencies
+    for (let i = 0; i < pixels.length; i += 16) {
+        const r = pixels[i];
+        const g = pixels[i + 1];
+        const b = pixels[i + 2];
+        const a = pixels[i + 3];
+        
+        if (a < 125) continue;
+        
+        // Quantize to reduce color space
+        const rBucket = Math.floor(r / 32) * 32;
+        const gBucket = Math.floor(g / 32) * 32;
+        const bBucket = Math.floor(b / 32) * 32;
+        
+        const key = `${rBucket},${gBucket},${bBucket}`;
+        colorMap[key] = (colorMap[key] || 0) + 1;
+    }
+    
+    // Sort by frequency and get diverse colors
+    const sortedColors = Object.entries(colorMap)
+        .sort((a, b) => b[1] - a[1])
+        .map(([color]) => {
+            const [r, g, b] = color.split(',').map(Number);
+            return { r, g, b };
+        });
+    
+    // Select diverse colors
+    const selectedColors = [sortedColors[0]];
+    for (let i = 1; i < sortedColors.length && selectedColors.length < 6; i++) {
+        const color = sortedColors[i];
+        // Check if color is different enough from already selected
+        const isDifferent = selectedColors.every(sc => {
+            const diff = Math.abs(sc.r - color.r) + Math.abs(sc.g - color.g) + Math.abs(sc.b - color.b);
+            return diff > 100;
+        });
+        if (isDifferent) {
+            selectedColors.push(color);
+        }
+    }
+    
+    return selectedColors.slice(0, 6);
+}
+
+function rgbToHex(r, g, b) {
+    return '#' + [r, g, b].map(x => {
+        const hex = x.toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+    }).join('');
+}
+
+function generateMaterialPalette(baseColor) {
+    // Adjust brightness for gradients
+    const darken = (color, amount = 0.2) => {
+        return {
+            r: Math.max(0, Math.floor(color.r * (1 - amount))),
+            g: Math.max(0, Math.floor(color.g * (1 - amount))),
+            b: Math.max(0, Math.floor(color.b * (1 - amount)))
+        };
+    };
+    
+    const lighten = (color, amount = 0.3) => {
+        return {
+            r: Math.min(255, Math.floor(color.r + (255 - color.r) * amount)),
+            g: Math.min(255, Math.floor(color.g + (255 - color.g) * amount)),
+            b: Math.min(255, Math.floor(color.b + (255 - color.b) * amount))
+        };
+    };
+    
+    // Generate complementary color
+    const secondary = {
+        r: Math.min(255, baseColor.r + 60),
+        g: Math.max(0, baseColor.g - 30),
+        b: Math.min(255, baseColor.b + 80)
+    };
+    
+    return {
+        primary: rgbToHex(baseColor.r, baseColor.g, baseColor.b),
+        primaryDark: rgbToHex(...Object.values(darken(baseColor, 0.2))),
+        primaryLight: rgbToHex(...Object.values(lighten(baseColor, 0.3))),
+        secondary: rgbToHex(secondary.r, secondary.g, secondary.b),
+        secondaryDark: rgbToHex(...Object.values(darken(secondary, 0.2))),
+        tertiary: rgbToHex(...Object.values(lighten(secondary, 0.2)))
+    };
+}
+
+function applyMaterialColors(palette) {
+    if (!palette) return;
+    
+    const root = document.documentElement;
+    root.style.setProperty('--md-primary', palette.primary);
+    root.style.setProperty('--md-primary-dark', palette.primaryDark);
+    root.style.setProperty('--md-secondary', palette.secondary);
+    root.style.setProperty('--md-secondary-dark', palette.secondaryDark);
+    root.style.setProperty('--md-tertiary', palette.tertiary);
+    
+    // Apply to modals and all elements
+    applyThemeToAllElements();
+}
+
+function applyThemeToAllElements() {
+    // Force re-render by toggling a class
+    document.body.classList.add('theme-updating');
+    setTimeout(() => {
+        document.body.classList.remove('theme-updating');
+    }, 50);
+}
+
+function displayColorPalette(colors) {
+    const paletteDiv = document.getElementById('colorPalette');
+    if (!paletteDiv || !colors) return;
+    
+    paletteDiv.innerHTML = '';
+    colors.forEach((color, index) => {
+        const swatch = document.createElement('div');
+        swatch.className = 'color-swatch';
+        const hexColor = rgbToHex(color.r, color.g, color.b);
+        swatch.style.backgroundColor = hexColor;
+        swatch.title = `Click to apply ${hexColor}`;
+        
+        // Add click handler to apply this color as theme
+        swatch.onclick = function(e) {
+            e.stopPropagation();
+            applyColorTheme(color);
+            
+            // Visual feedback
+            document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+            swatch.classList.add('selected');
+        };
+        
+        paletteDiv.appendChild(swatch);
+    });
+    
+    // Auto-select first color
+    if (paletteDiv.firstChild) {
+        paletteDiv.firstChild.classList.add('selected');
+    }
+}
+
+function applyColorTheme(color) {
+    const palette = generateMaterialPalette(color);
+    applyMaterialColors(palette);
+    
+    // Save the selected color
+    localStorage.setItem('fruitMatchSelectedColor', JSON.stringify(color));
+    
+    console.log('Theme applied:', palette);
+}
 
 // Initialize on page load
 window.onload = function() {
@@ -76,10 +256,21 @@ function saveGameData() {
 function loadBackgroundSettings() {
     const savedBackground = localStorage.getItem('fruitMatchBackground');
     const savedCustomBg = localStorage.getItem('fruitMatchCustomBackground');
+    const savedColors = localStorage.getItem('fruitMatchExtractedColors');
+    const savedSelectedColor = localStorage.getItem('fruitMatchSelectedColor');
     
     if (savedBackground) {
         if (savedBackground === 'custom' && savedCustomBg) {
+            if (savedColors) {
+                extractedColors = JSON.parse(savedColors);
+            }
             applyCustomBackgroundFromStorage(savedCustomBg);
+            
+            // Apply saved color theme
+            if (savedSelectedColor) {
+                const color = JSON.parse(savedSelectedColor);
+                applyColorTheme(color);
+            }
         } else {
             selectBackground(savedBackground);
         }
@@ -87,10 +278,13 @@ function loadBackgroundSettings() {
 }
 
 // Save background settings
-function saveBackgroundSettings(bgType, customData = null) {
+function saveBackgroundSettings(bgType, customData = null, colors = null) {
     localStorage.setItem('fruitMatchBackground', bgType);
     if (customData) {
         localStorage.setItem('fruitMatchCustomBackground', customData);
+    }
+    if (colors) {
+        localStorage.setItem('fruitMatchExtractedColors', JSON.stringify(colors));
     }
 }
 
@@ -104,6 +298,14 @@ function enableTransparentMode() {
 function disableTransparentMode() {
     transparentMode = false;
     document.getElementById('mainBody').classList.remove('transparent-mode');
+    
+    // Reset to default Material colors
+    const root = document.documentElement;
+    root.style.setProperty('--md-primary', '#667eea');
+    root.style.setProperty('--md-primary-dark', '#5568d3');
+    root.style.setProperty('--md-secondary', '#f093fb');
+    root.style.setProperty('--md-secondary-dark', '#d47fe3');
+    root.style.setProperty('--md-tertiary', '#f5576c');
 }
 
 // Select background
@@ -120,6 +322,9 @@ function selectBackground(bgType) {
     // Remove custom background image if switching to default
     body.style.backgroundImage = '';
     
+    // Clear saved color
+    localStorage.removeItem('fruitMatchSelectedColor');
+    
     saveBackgroundSettings(bgType);
 }
 
@@ -131,7 +336,6 @@ function setupCustomBackgroundUpload() {
         const file = e.target.files[0];
         
         if (file && file.type.startsWith('image/')) {
-            // Check file size (limit to 10MB for performance)
             if (file.size > 10 * 1024 * 1024) {
                 alert('Image is too large. Please choose an image smaller than 10MB.');
                 return;
@@ -142,12 +346,22 @@ function setupCustomBackgroundUpload() {
             reader.onload = function(event) {
                 customBackgroundData = event.target.result;
                 
-                // Show preview
                 const preview = document.getElementById('customPreview');
                 const previewImg = document.getElementById('customPreviewImg');
                 
                 previewImg.src = customBackgroundData;
                 preview.style.display = 'block';
+                
+                previewImg.onload = function() {
+                    const colors = extractColorsFromImage(previewImg);
+                    extractedColors = colors;
+                    displayColorPalette(colors);
+                    
+                    // Auto-apply first color
+                    if (colors && colors.length > 0) {
+                        applyColorTheme(colors[0]);
+                    }
+                };
             };
             
             reader.readAsDataURL(file);
@@ -163,20 +377,17 @@ function applyCustomBackground() {
     
     const body = document.getElementById('mainBody');
     
-    // Remove all background classes
     body.className = '';
     
-    // Apply custom background
     body.style.backgroundImage = `url(${customBackgroundData})`;
     body.style.backgroundSize = 'cover';
     body.style.backgroundPosition = 'center center';
     body.style.backgroundAttachment = 'fixed';
     body.style.backgroundRepeat = 'no-repeat';
     
-    // Enable transparent mode with glassmorphism
     enableTransparentMode();
     
-    saveBackgroundSettings('custom', customBackgroundData);
+    saveBackgroundSettings('custom', customBackgroundData, extractedColors);
     
     closeBackgroundSettings();
 }
@@ -194,18 +405,19 @@ function applyCustomBackgroundFromStorage(imageData) {
     
     customBackgroundData = imageData;
     
-    // Enable transparent mode
     enableTransparentMode();
 }
 
 // Remove custom background
 function removeCustomBackground() {
     customBackgroundData = null;
+    extractedColors = null;
     document.getElementById('customPreview').style.display = 'none';
     document.getElementById('customBgInput').value = '';
     localStorage.removeItem('fruitMatchCustomBackground');
+    localStorage.removeItem('fruitMatchExtractedColors');
+    localStorage.removeItem('fruitMatchSelectedColor');
     
-    // Switch to default background
     selectBackground('default1');
 }
 
@@ -258,19 +470,22 @@ function updateMenuButtonStates() {
     const musicToggleMenu = document.getElementById('musicToggleMenu');
     const sfxToggleMenu = document.getElementById('sfxToggleMenu');
     
+    const musicIcon = musicToggleMenu.querySelector('.material-icons-outlined');
+    const sfxIcon = sfxToggleMenu.querySelector('.material-icons-outlined');
+    
     if (musicEnabled) {
-        musicToggleMenu.textContent = '🎵 Music';
+        musicIcon.textContent = 'music_note';
         musicToggleMenu.classList.remove('muted');
     } else {
-        musicToggleMenu.textContent = '🔇 Music';
+        musicIcon.textContent = 'music_off';
         musicToggleMenu.classList.add('muted');
     }
     
     if (soundEnabled) {
-        sfxToggleMenu.textContent = '🔊 Effects';
+        sfxIcon.textContent = 'volume_up';
         sfxToggleMenu.classList.remove('muted');
     } else {
-        sfxToggleMenu.textContent = '🔇 Effects';
+        sfxIcon.textContent = 'volume_off';
         sfxToggleMenu.classList.add('muted');
     }
 }
@@ -294,7 +509,7 @@ function initLevelMode() {
     moves = levelData.moves;
     targetScore = levelData.target;
     
-    document.getElementById('gameTitle').textContent = `Level ${currentLevel}`;
+    document.getElementById('gameTitle').innerHTML = `<span class="material-icons-outlined">layers</span> Level ${currentLevel}`;
     document.getElementById('movesContainer').style.display = 'block';
     document.getElementById('levelContainer').style.display = 'block';
     document.getElementById('targetContainer').style.display = 'block';
@@ -311,7 +526,7 @@ function initInfiniteMode() {
     moves = 0;
     targetScore = 0;
     
-    document.getElementById('gameTitle').textContent = 'Infinite Mode';
+    document.getElementById('gameTitle').innerHTML = '<span class="material-icons-outlined">all_inclusive</span> Infinite Mode';
     document.getElementById('movesContainer').style.display = 'none';
     document.getElementById('levelContainer').style.display = 'none';
     document.getElementById('targetContainer').style.display = 'none';
@@ -349,7 +564,7 @@ function initGame() {
     setupSwipeListeners();
     setupAudio();
     setupGameAudioControls();
-    showMessage('Swipe to match fruits!');
+    showMessage('<span class="material-icons-outlined">swipe</span> Swipe to match!');
 }
 
 // Setup audio
@@ -418,18 +633,18 @@ function updateGameButtonStates() {
     const sfxIcon = sfxToggle.querySelector('.icon');
     
     if (musicEnabled) {
-        musicIcon.textContent = '🎵';
+        musicIcon.textContent = 'music_note';
         musicToggle.classList.remove('muted');
     } else {
-        musicIcon.textContent = '🔇';
+        musicIcon.textContent = 'music_off';
         musicToggle.classList.add('muted');
     }
     
     if (soundEnabled) {
-        sfxIcon.textContent = '🔊';
+        sfxIcon.textContent = 'volume_up';
         sfxToggle.classList.remove('muted');
     } else {
-        sfxIcon.textContent = '🔇';
+        sfxIcon.textContent = 'volume_off';
         sfxToggle.classList.add('muted');
     }
 }
@@ -448,7 +663,7 @@ function playPopSound() {
     }
 }
 
-// Generate pop sound with Web Audio API
+// Generate pop sound
 function playGeneratedPop() {
     if (!audioContext || !soundEnabled) return;
     
@@ -518,7 +733,6 @@ function setupSwipeListeners() {
     gameBoard.addEventListener('mouseup', handleMouseUp, false);
 }
 
-// Handle touch start
 function handleTouchStart(e) {
     if (isProcessing || (gameMode === 'level' && moves <= 0)) return;
     
@@ -539,7 +753,6 @@ function handleTouchStart(e) {
     e.preventDefault();
 }
 
-// Handle touch move
 function handleTouchMove(e) {
     if (!swipeStartTile) return;
     
@@ -550,7 +763,6 @@ function handleTouchMove(e) {
     e.preventDefault();
 }
 
-// Handle touch end
 function handleTouchEnd(e) {
     if (!swipeStartTile) return;
     
@@ -590,7 +802,6 @@ function handleTouchEnd(e) {
     e.preventDefault();
 }
 
-// Mouse handlers
 function handleMouseDown(e) {
     if (isProcessing || (gameMode === 'level' && moves <= 0)) return;
     
@@ -618,7 +829,6 @@ function handleMouseUp(e) {
     handleTouchEnd(e);
 }
 
-// Swap tiles
 function swapTiles(tile1, tile2) {
     isProcessing = true;
     
@@ -650,7 +860,6 @@ function swapTiles(tile1, tile2) {
     }, 300);
 }
 
-// Find matches
 function findMatches() {
     const matches = [];
     
@@ -691,7 +900,6 @@ function findMatches() {
     );
 }
 
-// Process matches
 function processMatches() {
     const matches = findMatches();
     
@@ -723,7 +931,6 @@ function processMatches() {
     }, 500);
 }
 
-// Remove matches
 function removeMatches() {
     const matches = findMatches();
     matches.forEach(match => {
@@ -731,7 +938,6 @@ function removeMatches() {
     });
 }
 
-// Fill board
 function fillBoard() {
     for (let col = 0; col < GRID_SIZE; col++) {
         let emptyRow = GRID_SIZE - 1;
@@ -755,7 +961,6 @@ function fillBoard() {
     }
 }
 
-// Update score display
 function updateScore() {
     document.getElementById('score').textContent = score;
     if (gameMode === 'level') {
@@ -769,18 +974,16 @@ function updateScore() {
     }
 }
 
-// Show message
 function showMessage(text) {
     const messageEl = document.getElementById('message');
-    messageEl.textContent = text;
+    messageEl.innerHTML = text;
     setTimeout(() => {
-        if (messageEl.textContent === text) {
-            messageEl.textContent = '';
+        if (messageEl.innerHTML === text) {
+            messageEl.innerHTML = '';
         }
     }, 2000);
 }
 
-// Check game status
 function checkGameStatus() {
     if (gameMode === 'level' && moves <= 0) {
         if (score >= targetScore) {
@@ -791,7 +994,6 @@ function checkGameStatus() {
     }
 }
 
-// Show level complete modal
 function showLevelComplete() {
     document.getElementById('modalScore').textContent = score;
     document.getElementById('modalLevel').textContent = currentLevel;
@@ -801,20 +1003,17 @@ function showLevelComplete() {
     saveGameData();
 }
 
-// Show game over modal
 function showGameOver(message) {
     document.getElementById('finalScore').textContent = score;
     document.getElementById('gameOverMessage').textContent = message;
     document.getElementById('gameOverModal').classList.add('active');
 }
 
-// Next level
 function nextLevel() {
     document.getElementById('levelCompleteModal').classList.remove('active');
     initLevelMode();
 }
 
-// Reset game
 function resetGame() {
     document.getElementById('levelCompleteModal').classList.remove('active');
     document.getElementById('gameOverModal').classList.remove('active');
@@ -827,7 +1026,6 @@ function resetGame() {
     }
 }
 
-// Back to menu
 function backToMenu() {
     document.getElementById('levelCompleteModal').classList.remove('active');
     document.getElementById('gameOverModal').classList.remove('active');
@@ -836,7 +1034,6 @@ function backToMenu() {
     updateModeSelection();
 }
 
-// Shuffle board
 function shuffle() {
     if (gameMode === 'level' && moves <= 0) return;
     
@@ -860,5 +1057,5 @@ function shuffle() {
     }
     
     renderBoard();
-    showMessage('Board shuffled!');
+    showMessage('<span class="material-icons-outlined">shuffle</span> Shuffled!');
 }
