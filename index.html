@@ -4,42 +4,57 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fruit Match Game</title>
+    
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="style.css">
 </head>
 <body id="mainBody">
     <!-- Mode Selection Screen -->
     <div class="mode-selection" id="modeSelection">
         <div class="mode-container" id="modeContainer">
-            <h1>🍓 𝓕𝓻𝓾𝓲𝓽 𝓜𝓪𝓽𝓬𝓱 🍊</h1>
+            <h1><span class="material-icons-outlined md-48">sports_esports</span> Fruit Match</h1>
             <p class="subtitle">Choose Your Game Mode</p>
             
             <div class="settings-row">
                 <div class="audio-controls-menu">
-                    <button id="musicToggleMenu" class="audio-btn" title="Toggle Music">🎵 Music</button>
-                    <button id="sfxToggleMenu" class="audio-btn" title="Toggle Sound Effects">🔊 Effects</button>
+                    <button id="musicToggleMenu" class="audio-btn material-btn" title="Toggle Music">
+                        <span class="material-icons-outlined">music_note</span>
+                        <span>Music</span>
+                    </button>
+                    <button id="sfxToggleMenu" class="audio-btn material-btn" title="Toggle Sound Effects">
+                        <span class="material-icons-outlined">volume_up</span>
+                        <span>Effects</span>
+                    </button>
                 </div>
                 
-                <button id="bgSettingsBtn" class="settings-btn" onclick="openBackgroundSettings()">
-                    🎨 Background
+                <button id="bgSettingsBtn" class="settings-btn material-btn" onclick="openBackgroundSettings()">
+                    <span class="material-icons-outlined">palette</span>
+                    <span>Theme</span>
                 </button>
             </div>
             
             <div class="mode-cards">
-                <div class="mode-card" onclick="selectMode('level')">
-                    <div class="mode-icon">🎯</div>
+                <div class="mode-card material-card" onclick="selectMode('level')">
+                    <span class="material-icons-outlined mode-icon">flag</span>
                     <h2>Level Mode</h2>
                     <p>Progress through challenging levels with limited moves</p>
                     <div class="mode-stats">
-                        <span>Current Level: <strong id="currentLevelDisplay">1</strong></span>
+                        <span class="material-icons-outlined">emoji_events</span>
+                        <span>Level <strong id="currentLevelDisplay">1</strong></span>
                     </div>
                 </div>
                 
-                <div class="mode-card" onclick="selectMode('infinite')">
-                    <div class="mode-icon">♾️</div>
+                <div class="mode-card material-card" onclick="selectMode('infinite')">
+                    <span class="material-icons-outlined mode-icon">all_inclusive</span>
                     <h2>Infinite Mode</h2>
                     <p>Play endlessly and beat your high score</p>
                     <div class="mode-stats">
-                        <span>High Score: <strong id="highScoreDisplay">0</strong></span>
+                        <span class="material-icons-outlined">star</span>
+                        <span>Best <strong id="highScoreDisplay">0</strong></span>
                     </div>
                 </div>
             </div>
@@ -49,125 +64,159 @@
     <!-- Game Screen -->
     <div class="game-container" id="gameContainer" style="display: none;">
         <div class="game-header">
-            <button class="back-btn" onclick="backToMenu()">← Menu</button>
-            <h1 id="gameTitle">🍓 Fruit Match 🍊</h1>
+            <button class="back-btn material-btn" onclick="backToMenu()">
+                <span class="material-icons-outlined">arrow_back</span>
+                <span>Menu</span>
+            </button>
+            <h1 id="gameTitle"><span class="material-icons-outlined">sports_esports</span> Fruit Match</h1>
         </div>
         
-        <div class="score-board">
+        <div class="score-board material-surface">
             <div class="score-item">
+                <span class="material-icons-outlined score-icon">analytics</span>
                 <div class="score-label">Score</div>
                 <div class="score-value" id="score">0</div>
             </div>
             <div class="score-item" id="movesContainer">
+                <span class="material-icons-outlined score-icon">touch_app</span>
                 <div class="score-label">Moves</div>
                 <div class="score-value" id="moves">20</div>
             </div>
             <div class="score-item" id="levelContainer" style="display: none;">
+                <span class="material-icons-outlined score-icon">layers</span>
                 <div class="score-label">Level</div>
                 <div class="score-value" id="level">1</div>
             </div>
             <div class="score-item" id="targetContainer" style="display: none;">
+                <span class="material-icons-outlined score-icon">flag</span>
                 <div class="score-label">Target</div>
                 <div class="score-value" id="target">500</div>
             </div>
             <div class="score-item" id="highScoreContainer" style="display: none;">
+                <span class="material-icons-outlined score-icon">emoji_events</span>
                 <div class="score-label">Best</div>
                 <div class="score-value" id="highScore">0</div>
             </div>
         </div>
 
         <div class="audio-controls">
-            <button id="musicToggle" class="audio-btn music-btn" title="Toggle Music">
-                <span class="icon">🎵</span>
+            <button id="musicToggle" class="audio-btn material-btn" title="Toggle Music">
+                <span class="material-icons-outlined icon">music_note</span>
                 <span class="label">Music</span>
             </button>
-            <button id="sfxToggle" class="audio-btn sfx-btn" title="Toggle Sound Effects">
-                <span class="icon">🔊</span>
+            <button id="sfxToggle" class="audio-btn material-btn" title="Toggle Sound Effects">
+                <span class="material-icons-outlined icon">volume_up</span>
                 <span class="label">Effects</span>
             </button>
         </div>
 
-        <div class="game-board" id="gameBoard"></div>
+        <div class="game-board material-surface" id="gameBoard"></div>
 
         <div class="buttons">
-            <button onclick="resetGame()">🔄 Restart</button>
-            <button onclick="shuffle()">🔀 Shuffle</button>
+            <button class="material-btn" onclick="resetGame()">
+                <span class="material-icons-outlined">refresh</span>
+                <span>Restart</span>
+            </button>
+            <button class="material-btn" onclick="shuffle()">
+                <span class="material-icons-outlined">shuffle</span>
+                <span>Shuffle</span>
+            </button>
         </div>
 
-        <div class="message" id="message">Swipe to match fruits!</div>
+        <div class="message" id="message">
+            <span class="material-icons-outlined">swipe</span> Swipe to match fruits!
+        </div>
     </div>
 
     <!-- Background Settings Modal -->
     <div class="modal" id="backgroundModal">
-        <div class="modal-content background-settings">
-            <h2>🎨 Background Settings</h2>
+        <div class="modal-content background-settings material-surface">
+            <h2><span class="material-icons-outlined">palette</span> Theme Settings</h2>
             
             <div class="bg-section">
-                <h3>Default Backgrounds</h3>
+                <h3><span class="material-icons-outlined">color_lens</span> Default Themes</h3>
                 <div class="bg-grid">
-                    <div class="bg-option" onclick="selectBackground('default1')">
+                    <div class="bg-option material-card" onclick="selectBackground('default1')">
                         <div class="bg-preview bg-default1"></div>
-                        <p>Gradient Purple</p>
+                        <p>Purple</p>
                     </div>
-                    <div class="bg-option" onclick="selectBackground('default2')">
+                    <div class="bg-option material-card" onclick="selectBackground('default2')">
                         <div class="bg-preview bg-default2"></div>
-                        <p>Sunset Orange</p>
+                        <p>Orange</p>
                     </div>
-                    <div class="bg-option" onclick="selectBackground('default3')">
+                    <div class="bg-option material-card" onclick="selectBackground('default3')">
                         <div class="bg-preview bg-default3"></div>
-                        <p>Ocean Blue</p>
+                        <p>Blue</p>
                     </div>
-                    <div class="bg-option" onclick="selectBackground('default4')">
+                    <div class="bg-option material-card" onclick="selectBackground('default4')">
                         <div class="bg-preview bg-default4"></div>
-                        <p>Forest Green</p>
+                        <p>Green</p>
                     </div>
-                    <div class="bg-option" onclick="selectBackground('default5')">
+                    <div class="bg-option material-card" onclick="selectBackground('default5')">
                         <div class="bg-preview bg-default5"></div>
-                        <p>AMOLED Dark</p>
+                        <p>AMOLED</p>
                     </div>
                 </div>
             </div>
             
             <div class="bg-section">
-                <h3>Custom Background</h3>
-                <p class="bg-info">Upload your own image (supports up to 4K resolution)</p>
-                <p class="bg-info-detail">✨ Auto-transparent UI with high-contrast text</p>
+                <h3><span class="material-icons-outlined">image</span> Custom Background</h3>
+                <p class="bg-info">Upload your own image (up to 4K resolution)</p>
+                <p class="bg-info-detail"><span class="material-icons-outlined tiny">auto_awesome</span> Auto-adaptive colors & transparent UI</p>
                 <div class="custom-upload">
                     <input type="file" id="customBgInput" accept="image/*" style="display: none;">
-                    <button class="upload-btn" onclick="document.getElementById('customBgInput').click()">
-                        📁 Choose Image
+                    <button class="upload-btn material-btn" onclick="document.getElementById('customBgInput').click()">
+                        <span class="material-icons-outlined">add_photo_alternate</span>
+                        <span>Choose Image</span>
                     </button>
-                    <div id="customPreview" class="custom-preview" style="display: none;">
+                    <div id="customPreview" class="custom-preview material-surface" style="display: none;">
                         <img id="customPreviewImg" alt="Preview">
-                        <button class="apply-btn" onclick="applyCustomBackground()">✓ Apply</button>
-                        <button class="remove-btn" onclick="removeCustomBackground()">✕ Remove</button>
+                        <div class="color-palette-section">
+                            <p class="palette-title"><span class="material-icons-outlined tiny">palette</span> Tap a color to apply theme</p>
+                            <div id="colorPalette" class="color-palette"></div>
+                        </div>
+                        <div class="preview-actions">
+                            <button class="apply-btn material-btn" onclick="applyCustomBackground()">
+                                <span class="material-icons-outlined">check</span>
+                                <span>Apply</span>
+                            </button>
+                            <button class="remove-btn material-btn" onclick="removeCustomBackground()">
+                                <span class="material-icons-outlined">close</span>
+                                <span>Remove</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <button class="modal-btn" onclick="closeBackgroundSettings()">Close</button>
+            <button class="modal-btn material-btn" onclick="closeBackgroundSettings()">Close</button>
         </div>
     </div>
 
     <!-- Level Complete Modal -->
     <div class="modal" id="levelCompleteModal">
-        <div class="modal-content">
-            <h2>🎉 Level Complete!</h2>
+        <div class="modal-content material-surface">
+            <span class="material-icons-outlined celebration-icon">emoji_events</span>
+            <h2>Level Complete!</h2>
             <p class="modal-score">Score: <span id="modalScore">0</span></p>
             <p class="modal-level">Level <span id="modalLevel">1</span> Completed</p>
-            <button class="modal-btn" onclick="nextLevel()">Next Level →</button>
-            <button class="modal-btn secondary" onclick="backToMenu()">Menu</button>
+            <button class="modal-btn material-btn" onclick="nextLevel()">
+                <span>Next Level</span>
+                <span class="material-icons-outlined">arrow_forward</span>
+            </button>
+            <button class="modal-btn secondary material-btn" onclick="backToMenu()">Menu</button>
         </div>
     </div>
 
     <!-- Game Over Modal -->
     <div class="modal" id="gameOverModal">
-        <div class="modal-content">
+        <div class="modal-content material-surface">
+            <span class="material-icons-outlined gameover-icon">sentiment_dissatisfied</span>
             <h2>Game Over</h2>
             <p class="modal-score">Final Score: <span id="finalScore">0</span></p>
             <p class="modal-message" id="gameOverMessage"></p>
-            <button class="modal-btn" onclick="resetGame()">Try Again</button>
-            <button class="modal-btn secondary" onclick="backToMenu()">Menu</button>
+            <button class="modal-btn material-btn" onclick="resetGame()">Try Again</button>
+            <button class="modal-btn secondary material-btn" onclick="backToMenu()">Menu</button>
         </div>
     </div>
 
