@@ -38,6 +38,10 @@ body.bg-default4 {
     background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
 }
 
+body.bg-default5 {
+    background: #000000;
+}
+
 .bg-default1 {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
@@ -54,6 +58,108 @@ body.bg-default4 {
     background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
 }
 
+.bg-default5 {
+    background: #000000;
+}
+
+/* Transparent Mode (Glassmorphism) */
+body.transparent-mode .mode-container,
+body.transparent-mode .game-container {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+}
+
+body.transparent-mode .score-board {
+    background: rgba(240, 147, 251, 0.25);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+body.transparent-mode .game-board {
+    background: rgba(240, 240, 240, 0.3);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+body.transparent-mode .mode-card {
+    background: rgba(240, 147, 251, 0.3);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* High Contrast Text for Transparent Mode */
+body.transparent-mode h1,
+body.transparent-mode h2,
+body.transparent-mode h3 {
+    color: #ffffff;
+    text-shadow: 
+        2px 2px 8px rgba(0, 0, 0, 0.9),
+        -1px -1px 4px rgba(0, 0, 0, 0.7),
+        0 0 15px rgba(0, 0, 0, 0.8);
+    font-weight: 900;
+}
+
+body.transparent-mode .subtitle,
+body.transparent-mode .mode-card p,
+body.transparent-mode .bg-info,
+body.transparent-mode .message {
+    color: #ffffff;
+    text-shadow: 
+        1px 1px 6px rgba(0, 0, 0, 0.9),
+        -1px -1px 3px rgba(0, 0, 0, 0.7),
+        0 0 10px rgba(0, 0, 0, 0.8);
+    font-weight: 700;
+}
+
+body.transparent-mode .score-label,
+body.transparent-mode .score-value {
+    text-shadow: 
+        1px 1px 6px rgba(0, 0, 0, 0.9),
+        -1px -1px 3px rgba(0, 0, 0, 0.7);
+    font-weight: 800;
+}
+
+body.transparent-mode .mode-stats {
+    background: rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+body.transparent-mode .tile {
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+body.transparent-mode button {
+    background: rgba(102, 126, 234, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7);
+    font-weight: 800;
+}
+
+body.transparent-mode .audio-btn {
+    background: rgba(102, 126, 234, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+body.transparent-mode .settings-btn {
+    background: rgba(240, 147, 251, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
 /* Mode Selection */
 .mode-selection {
     width: 100%;
@@ -66,6 +172,7 @@ body.bg-default4 {
     border-radius: 20px;
     padding: 40px 30px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
 }
 
 .mode-container h1 {
@@ -201,6 +308,7 @@ body.bg-default4 {
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     max-width: 500px;
     width: 100%;
+    transition: all 0.3s ease;
 }
 
 .game-header {
@@ -246,6 +354,7 @@ body.bg-default4 {
     border-radius: 10px;
     color: white;
     gap: 10px;
+    transition: all 0.3s ease;
 }
 
 .score-item {
@@ -297,6 +406,7 @@ body.bg-default4 {
     border-radius: 15px;
     margin-bottom: 20px;
     touch-action: none;
+    transition: all 0.3s ease;
 }
 
 .tile {
@@ -388,7 +498,7 @@ button:active {
 
 /* Background Settings Modal */
 .background-settings {
-    max-width: 600px;
+    max-width: 650px;
     max-height: 90vh;
     overflow-y: auto;
 }
@@ -412,12 +522,19 @@ button:active {
 .bg-info {
     color: #666;
     font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.bg-info-detail {
+    color: #667eea;
+    font-size: 13px;
     margin-bottom: 15px;
+    font-weight: bold;
 }
 
 .bg-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
     gap: 15px;
 }
 
@@ -446,7 +563,7 @@ button:active {
 
 .bg-option p {
     color: #666;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: bold;
 }
 
@@ -629,5 +746,9 @@ button:active {
     
     .settings-btn {
         width: 100%;
+    }
+    
+    .bg-grid {
+        grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
     }
 }
