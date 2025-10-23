@@ -14,8 +14,9 @@ let musicEnabled = true;
 let customBackgroundData = null;
 let transparentMode = false;
 let extractedColors = null;
+let selectedColorIndex = 0;
 
-// Swipe detection variables
+// Swipe detection
 let touchStartX = 0;
 let touchStartY = 0;
 let touchEndX = 0;
@@ -23,98 +24,156 @@ let touchEndY = 0;
 let swipeStartTile = null;
 let minSwipeDistance = 30;
 
-// Audio elements
+// Audio
 let audioContext;
 let popSoundElement;
 let backgroundMusicElement;
 let musicStarted = false;
 
-// Level configuration
 const LEVEL_CONFIG = [
-    { level: 1, moves: 20, target: 500, difficulty: 'easy' },
-    { level: 2, moves: 20, target: 700, difficulty: 'easy' },
-    { level: 3, moves: 18, target: 900, difficulty: 'medium' },
-    { level: 4, moves: 18, target: 1100, difficulty: 'medium' },
-    { level: 5, moves: 16, target: 1300, difficulty: 'medium' },
-    { level: 6, moves: 16, target: 1500, difficulty: 'hard' },
-    { level: 7, moves: 15, target: 1700, difficulty: 'hard' },
-    { level: 8, moves: 15, target: 2000, difficulty: 'hard' },
-    { level: 9, moves: 14, target: 2300, difficulty: 'expert' },
-    { level: 10, moves: 14, target: 2600, difficulty: 'expert' }
+    { level: 1, moves: 20, target: 500 },
+    { level: 2, moves: 20, target: 700 },
+    { level: 3, moves: 18, target: 900 },
+    { level: 4, moves: 18, target: 1100 },
+    { level: 5, moves: 16, target: 1300 },
+    { level: 6, moves: 16, target: 1500 },
+    { level: 7, moves: 15, target: 1700 },
+    { level: 8, moves: 15, target: 2000 },
+    { level: 9, moves: 14, target: 2300 },
+    { level: 10, moves: 14, target: 2600 }
 ];
 
-// Color extraction functions
+// Initialize
+window.onload = function() {
+    loadGameData();
+    updateModeSelection();
+    setupMenuAudioControls();
+    loadBackgroundSettings();
+    setupCustomBackgroundUpload();
+    setupRippleEffect();
+};
+
+// Ripple Effect
+function setupRippleEffect() {
+    document.addEventListener('click', function(e) {
+        const target = e.target.closest('.ripple');
+        if (!target) return;
+        
+        const ripple = document.createElement('span');
+        ripple.classList.add('ripple-effect');
+        
+        const rect = target.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = e.clientX - rect.left - size / 2;
+        const y = e.clientY - rect.top - size / 2;
+        
+        ripple.style.width = ripple.style.height = size + 'px';
+        ripple.style.left = x + 'px';
+        ripple.style.top = y + 'px';
+        
+        target.appendChild(ripple);
+        
+        // Play click sound
+        playClickSound();
+        
+        setTimeout(() => ripple.remove(), 600);
+    });
+}
+
+// Click Sound
+function playClickSound() {
+    if (!soundEnabled) return;
+    
+    try {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = 1000;
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.05);
+    } catch (error) {
+        console.log('Click sound failed:', error);
+    }
+}
+
+// Color Extraction
 function extractColorsFromImage(imgElement) {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    // Resize for performance
-    const MAX_SIZE = 100;
-    let width = imgElement.width;
-    let height = imgElement.height;
-    
-    if (width > height) {
-        if (width > MAX_SIZE) {
-            height = height * (MAX_SIZE / width);
-            width = MAX_SIZE;
-        }
-    } else {
-        if (height > MAX_SIZE) {
-            width = width * (MAX_SIZE / height);
-            height = MAX_SIZE;
-        }
-    }
-    
-    canvas.width = width;
-    canvas.height = height;
-    
-    ctx.drawImage(imgElement, 0, 0, width, height);
-    
-    const imageData = ctx.getImageData(0, 0, width, height);
-    const pixels = imageData.data;
-    const colorMap = {};
-    
-    // Count color frequencies
-    for (let i = 0; i < pixels.length; i += 16) {
-        const r = pixels[i];
-        const g = pixels[i + 1];
-        const b = pixels[i + 2];
-        const a = pixels[i + 3];
+    return new Promise((resolve) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
         
-        if (a < 125) continue;
+        const MAX_SIZE = 150;
+        let width = imgElement.naturalWidth || imgElement.width;
+        let height = imgElement.naturalHeight || imgElement.height;
         
-        // Quantize to reduce color space
-        const rBucket = Math.floor(r / 32) * 32;
-        const gBucket = Math.floor(g / 32) * 32;
-        const bBucket = Math.floor(b / 32) * 32;
-        
-        const key = `${rBucket},${gBucket},${bBucket}`;
-        colorMap[key] = (colorMap[key] || 0) + 1;
-    }
-    
-    // Sort by frequency and get diverse colors
-    const sortedColors = Object.entries(colorMap)
-        .sort((a, b) => b[1] - a[1])
-        .map(([color]) => {
-            const [r, g, b] = color.split(',').map(Number);
-            return { r, g, b };
-        });
-    
-    // Select diverse colors
-    const selectedColors = [sortedColors[0]];
-    for (let i = 1; i < sortedColors.length && selectedColors.length < 6; i++) {
-        const color = sortedColors[i];
-        // Check if color is different enough from already selected
-        const isDifferent = selectedColors.every(sc => {
-            const diff = Math.abs(sc.r - color.r) + Math.abs(sc.g - color.g) + Math.abs(sc.b - color.b);
-            return diff > 100;
-        });
-        if (isDifferent) {
-            selectedColors.push(color);
+        if (width > height) {
+            if (width > MAX_SIZE) {
+                height = height * (MAX_SIZE / width);
+                width = MAX_SIZE;
+            }
+        } else {
+            if (height > MAX_SIZE) {
+                width = width * (MAX_SIZE / height);
+                height = MAX_SIZE;
+            }
         }
-    }
-    
-    return selectedColors.slice(0, 6);
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        ctx.drawImage(imgElement, 0, 0, width, height);
+        
+        const imageData = ctx.getImageData(0, 0, width, height);
+        const pixels = imageData.data;
+        const colorMap = {};
+        
+        for (let i = 0; i < pixels.length; i += 20) {
+            const r = pixels[i];
+            const g = pixels[i + 1];
+            const b = pixels[i + 2];
+            const a = pixels[i + 3];
+            
+            if (a < 125) continue;
+            
+            const rBucket = Math.floor(r / 40) * 40;
+            const gBucket = Math.floor(g / 40) * 40;
+            const bBucket = Math.floor(b / 40) * 40;
+            
+            const key = `${rBucket},${gBucket},${bBucket}`;
+            colorMap[key] = (colorMap[key] || 0) + 1;
+        }
+        
+        const sortedColors = Object.entries(colorMap)
+            .sort((a, b) => b[1] - a[1])
+            .map(([color]) => {
+                const [r, g, b] = color.split(',').map(Number);
+                return { r, g, b };
+            });
+        
+        const selectedColors = [sortedColors[0]];
+        for (let i = 1; i < sortedColors.length && selectedColors.length < 6; i++) {
+            const color = sortedColors[i];
+            const isDifferent = selectedColors.every(sc => {
+                const diff = Math.abs(sc.r - color.r) + Math.abs(sc.g - color.g) + Math.abs(sc.b - color.b);
+                return diff > 120;
+            });
+            if (isDifferent) {
+                selectedColors.push(color);
+            }
+        }
+        
+        resolve(selectedColors.slice(0, 6));
+    });
 }
 
 function rgbToHex(r, g, b) {
@@ -125,26 +184,20 @@ function rgbToHex(r, g, b) {
 }
 
 function generateMaterialPalette(baseColor) {
-    // Adjust brightness for gradients
-    const darken = (color, amount = 0.2) => {
-        return {
-            r: Math.max(0, Math.floor(color.r * (1 - amount))),
-            g: Math.max(0, Math.floor(color.g * (1 - amount))),
-            b: Math.max(0, Math.floor(color.b * (1 - amount)))
-        };
-    };
+    const darken = (color, amount = 0.2) => ({
+        r: Math.max(0, Math.floor(color.r * (1 - amount))),
+        g: Math.max(0, Math.floor(color.g * (1 - amount))),
+        b: Math.max(0, Math.floor(color.b * (1 - amount)))
+    });
     
-    const lighten = (color, amount = 0.3) => {
-        return {
-            r: Math.min(255, Math.floor(color.r + (255 - color.r) * amount)),
-            g: Math.min(255, Math.floor(color.g + (255 - color.g) * amount)),
-            b: Math.min(255, Math.floor(color.b + (255 - color.b) * amount))
-        };
-    };
+    const lighten = (color, amount = 0.3) => ({
+        r: Math.min(255, Math.floor(color.r + (255 - color.r) * amount)),
+        g: Math.min(255, Math.floor(color.g + (255 - color.g) * amount)),
+        b: Math.min(255, Math.floor(color.b + (255 - color.b) * amount))
+    });
     
-    // Generate complementary color
     const secondary = {
-        r: Math.min(255, baseColor.r + 60),
+        r: Math.min(255, Math.max(0, baseColor.r + 60)),
         g: Math.max(0, baseColor.g - 30),
         b: Math.min(255, baseColor.b + 80)
     };
@@ -152,7 +205,6 @@ function generateMaterialPalette(baseColor) {
     return {
         primary: rgbToHex(baseColor.r, baseColor.g, baseColor.b),
         primaryDark: rgbToHex(...Object.values(darken(baseColor, 0.2))),
-        primaryLight: rgbToHex(...Object.values(lighten(baseColor, 0.3))),
         secondary: rgbToHex(secondary.r, secondary.g, secondary.b),
         secondaryDark: rgbToHex(...Object.values(darken(secondary, 0.2))),
         tertiary: rgbToHex(...Object.values(lighten(secondary, 0.2)))
@@ -168,70 +220,46 @@ function applyMaterialColors(palette) {
     root.style.setProperty('--md-secondary', palette.secondary);
     root.style.setProperty('--md-secondary-dark', palette.secondaryDark);
     root.style.setProperty('--md-tertiary', palette.tertiary);
-    
-    // Apply to modals and all elements
-    applyThemeToAllElements();
-}
-
-function applyThemeToAllElements() {
-    // Force re-render by toggling a class
-    document.body.classList.add('theme-updating');
-    setTimeout(() => {
-        document.body.classList.remove('theme-updating');
-    }, 50);
 }
 
 function displayColorPalette(colors) {
-    const paletteDiv = document.getElementById('colorPalette');
-    if (!paletteDiv || !colors) return;
+    const paletteGrid = document.getElementById('colorPaletteGrid');
+    if (!paletteGrid || !colors || colors.length === 0) return;
     
-    paletteDiv.innerHTML = '';
+    paletteGrid.innerHTML = '';
+    
     colors.forEach((color, index) => {
         const swatch = document.createElement('div');
-        swatch.className = 'color-swatch';
+        swatch.className = 'color-swatch ripple';
         const hexColor = rgbToHex(color.r, color.g, color.b);
         swatch.style.backgroundColor = hexColor;
-        swatch.title = `Click to apply ${hexColor}`;
+        swatch.title = hexColor;
         
-        // Add click handler to apply this color as theme
+        if (index === selectedColorIndex) {
+            swatch.classList.add('selected');
+        }
+        
         swatch.onclick = function(e) {
             e.stopPropagation();
-            applyColorTheme(color);
+            applyColorTheme(color, index);
             
-            // Visual feedback
             document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
             swatch.classList.add('selected');
         };
         
-        paletteDiv.appendChild(swatch);
+        paletteGrid.appendChild(swatch);
     });
-    
-    // Auto-select first color
-    if (paletteDiv.firstChild) {
-        paletteDiv.firstChild.classList.add('selected');
-    }
 }
 
-function applyColorTheme(color) {
+function applyColorTheme(color, index) {
+    selectedColorIndex = index;
     const palette = generateMaterialPalette(color);
     applyMaterialColors(palette);
-    
-    // Save the selected color
     localStorage.setItem('fruitMatchSelectedColor', JSON.stringify(color));
-    
-    console.log('Theme applied:', palette);
+    localStorage.setItem('fruitMatchSelectedColorIndex', index);
 }
 
-// Initialize on page load
-window.onload = function() {
-    loadGameData();
-    updateModeSelection();
-    setupMenuAudioControls();
-    loadBackgroundSettings();
-    setupCustomBackgroundUpload();
-};
-
-// Load game data from localStorage
+// Load/Save Data
 function loadGameData() {
     const savedLevel = localStorage.getItem('fruitMatchLevel');
     const savedHighScore = localStorage.getItem('fruitMatchHighScore');
@@ -244,7 +272,6 @@ function loadGameData() {
     if (savedMusicEnabled !== null) musicEnabled = savedMusicEnabled === 'true';
 }
 
-// Save game data to localStorage
 function saveGameData() {
     localStorage.setItem('fruitMatchLevel', currentLevel);
     localStorage.setItem('fruitMatchHighScore', highScore);
@@ -252,32 +279,31 @@ function saveGameData() {
     localStorage.setItem('fruitMatchMusicEnabled', musicEnabled);
 }
 
-// Load background settings
 function loadBackgroundSettings() {
     const savedBackground = localStorage.getItem('fruitMatchBackground');
     const savedCustomBg = localStorage.getItem('fruitMatchCustomBackground');
     const savedColors = localStorage.getItem('fruitMatchExtractedColors');
     const savedSelectedColor = localStorage.getItem('fruitMatchSelectedColor');
+    const savedColorIndex = localStorage.getItem('fruitMatchSelectedColorIndex');
     
-    if (savedBackground) {
-        if (savedBackground === 'custom' && savedCustomBg) {
-            if (savedColors) {
-                extractedColors = JSON.parse(savedColors);
-            }
-            applyCustomBackgroundFromStorage(savedCustomBg);
-            
-            // Apply saved color theme
-            if (savedSelectedColor) {
-                const color = JSON.parse(savedSelectedColor);
-                applyColorTheme(color);
-            }
-        } else {
-            selectBackground(savedBackground);
+    if (savedBackground === 'custom' && savedCustomBg) {
+        if (savedColors) {
+            extractedColors = JSON.parse(savedColors);
         }
+        if (savedColorIndex) {
+            selectedColorIndex = parseInt(savedColorIndex);
+        }
+        applyCustomBackgroundFromStorage(savedCustomBg);
+        
+        if (savedSelectedColor) {
+            const color = JSON.parse(savedSelectedColor);
+            applyColorTheme(color, selectedColorIndex);
+        }
+    } else if (savedBackground) {
+        selectBackground(savedBackground);
     }
 }
 
-// Save background settings
 function saveBackgroundSettings(bgType, customData = null, colors = null) {
     localStorage.setItem('fruitMatchBackground', bgType);
     if (customData) {
@@ -288,18 +314,16 @@ function saveBackgroundSettings(bgType, customData = null, colors = null) {
     }
 }
 
-// Enable transparent mode
+// Transparent Mode
 function enableTransparentMode() {
     transparentMode = true;
     document.getElementById('mainBody').classList.add('transparent-mode');
 }
 
-// Disable transparent mode
 function disableTransparentMode() {
     transparentMode = false;
     document.getElementById('mainBody').classList.remove('transparent-mode');
     
-    // Reset to default Material colors
     const root = document.documentElement;
     root.style.setProperty('--md-primary', '#667eea');
     root.style.setProperty('--md-primary-dark', '#5568d3');
@@ -308,31 +332,26 @@ function disableTransparentMode() {
     root.style.setProperty('--md-tertiary', '#f5576c');
 }
 
-// Select background
+// Background Selection
 function selectBackground(bgType) {
     const body = document.getElementById('mainBody');
-    
-    // Remove all background classes and transparent mode
     body.className = '';
     disableTransparentMode();
-    
-    // Apply selected background
     body.classList.add('bg-' + bgType);
-    
-    // Remove custom background image if switching to default
     body.style.backgroundImage = '';
     
-    // Clear saved color
     localStorage.removeItem('fruitMatchSelectedColor');
+    localStorage.removeItem('fruitMatchSelectedColorIndex');
     
     saveBackgroundSettings(bgType);
+    closeBackgroundSettings();
 }
 
-// Setup custom background upload
+// Custom Background Upload
 function setupCustomBackgroundUpload() {
     const fileInput = document.getElementById('customBgInput');
     
-    fileInput.addEventListener('change', function(e) {
+    fileInput.addEventListener('change', async function(e) {
         const file = e.target.files[0];
         
         if (file && file.type.startsWith('image/')) {
@@ -343,23 +362,26 @@ function setupCustomBackgroundUpload() {
             
             const reader = new FileReader();
             
-            reader.onload = function(event) {
+            reader.onload = async function(event) {
                 customBackgroundData = event.target.result;
                 
-                const preview = document.getElementById('customPreview');
-                const previewImg = document.getElementById('customPreviewImg');
+                const previewImg = document.getElementById('previewImage');
+                const previewSection = document.getElementById('imagePreviewSection');
                 
                 previewImg.src = customBackgroundData;
-                preview.style.display = 'block';
+                previewSection.style.display = 'block';
                 
-                previewImg.onload = function() {
-                    const colors = extractColorsFromImage(previewImg);
-                    extractedColors = colors;
-                    displayColorPalette(colors);
-                    
-                    // Auto-apply first color
-                    if (colors && colors.length > 0) {
-                        applyColorTheme(colors[0]);
+                previewImg.onload = async function() {
+                    try {
+                        const colors = await extractColorsFromImage(previewImg);
+                        extractedColors = colors;
+                        displayColorPalette(colors);
+                        
+                        if (colors && colors.length > 0) {
+                            applyColorTheme(colors[0], 0);
+                        }
+                    } catch (error) {
+                        console.error('Color extraction failed:', error);
                     }
                 };
             };
@@ -371,14 +393,20 @@ function setupCustomBackgroundUpload() {
     });
 }
 
-// Apply custom background
-function applyCustomBackground() {
+function openCustomBackgroundUpload() {
+    closeBackgroundSettings();
+    document.getElementById('customUploadModal').classList.add('active');
+}
+
+function closeCustomUpload() {
+    document.getElementById('customUploadModal').classList.remove('active');
+}
+
+function applyCustomWallpaper() {
     if (!customBackgroundData) return;
     
     const body = document.getElementById('mainBody');
-    
     body.className = '';
-    
     body.style.backgroundImage = `url(${customBackgroundData})`;
     body.style.backgroundSize = 'cover';
     body.style.backgroundPosition = 'center center';
@@ -386,16 +414,12 @@ function applyCustomBackground() {
     body.style.backgroundRepeat = 'no-repeat';
     
     enableTransparentMode();
-    
     saveBackgroundSettings('custom', customBackgroundData, extractedColors);
-    
-    closeBackgroundSettings();
+    closeCustomUpload();
 }
 
-// Apply custom background from storage
 function applyCustomBackgroundFromStorage(imageData) {
     const body = document.getElementById('mainBody');
-    
     body.className = '';
     body.style.backgroundImage = `url(${imageData})`;
     body.style.backgroundSize = 'cover';
@@ -404,40 +428,41 @@ function applyCustomBackgroundFromStorage(imageData) {
     body.style.backgroundRepeat = 'no-repeat';
     
     customBackgroundData = imageData;
-    
     enableTransparentMode();
 }
 
-// Remove custom background
-function removeCustomBackground() {
+function removeCustomWallpaper() {
     customBackgroundData = null;
     extractedColors = null;
-    document.getElementById('customPreview').style.display = 'none';
+    selectedColorIndex = 0;
+    document.getElementById('imagePreviewSection').style.display = 'none';
     document.getElementById('customBgInput').value = '';
+    
     localStorage.removeItem('fruitMatchCustomBackground');
     localStorage.removeItem('fruitMatchExtractedColors');
     localStorage.removeItem('fruitMatchSelectedColor');
+    localStorage.removeItem('fruitMatchSelectedColorIndex');
     
     selectBackground('default1');
+    closeCustomUpload();
 }
 
-// Open background settings
+// Modal Controls
 function openBackgroundSettings() {
     document.getElementById('backgroundModal').classList.add('active');
 }
 
-// Close background settings
 function closeBackgroundSettings() {
     document.getElementById('backgroundModal').classList.remove('active');
 }
 
-// Update mode selection display
+// Mode Selection
 function updateModeSelection() {
     document.getElementById('currentLevelDisplay').textContent = currentLevel;
     document.getElementById('highScoreDisplay').textContent = highScore;
 }
 
-// Setup menu audio controls
+// Audio Controls
 function setupMenuAudioControls() {
     const musicToggleMenu = document.getElementById('musicToggleMenu');
     const sfxToggleMenu = document.getElementById('sfxToggleMenu');
@@ -465,7 +490,6 @@ function setupMenuAudioControls() {
     });
 }
 
-// Update menu button states
 function updateMenuButtonStates() {
     const musicToggleMenu = document.getElementById('musicToggleMenu');
     const sfxToggleMenu = document.getElementById('sfxToggleMenu');
@@ -490,7 +514,7 @@ function updateMenuButtonStates() {
     }
 }
 
-// Select game mode
+// Game Mode Selection
 function selectMode(mode) {
     gameMode = mode;
     document.getElementById('modeSelection').style.display = 'none';
@@ -503,7 +527,6 @@ function selectMode(mode) {
     }
 }
 
-// Initialize level mode
 function initLevelMode() {
     const levelData = getLevelConfig(currentLevel);
     moves = levelData.moves;
@@ -521,7 +544,6 @@ function initLevelMode() {
     initGame();
 }
 
-// Initialize infinite mode
 function initInfiniteMode() {
     moves = 0;
     targetScore = 0;
@@ -537,17 +559,16 @@ function initInfiniteMode() {
     initGame();
 }
 
-// Get level configuration
 function getLevelConfig(level) {
     if (level <= LEVEL_CONFIG.length) {
         return LEVEL_CONFIG[level - 1];
     }
     const movesCount = Math.max(12, 20 - Math.floor(level / 2));
     const target = 500 + (level - 1) * 300;
-    return { level, moves: movesCount, target, difficulty: 'expert' };
+    return { level, moves: movesCount, target };
 }
 
-// Initialize game
+// Game Logic
 function initGame() {
     board = [];
     score = 0;
@@ -567,11 +588,13 @@ function initGame() {
     showMessage('<span class="material-icons-outlined">swipe</span> Swipe to match!');
 }
 
-// Setup audio
 function setupAudio() {
     popSoundElement = document.getElementById('popSound');
     backgroundMusicElement = document.getElementById('backgroundMusic');
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
     
     if (backgroundMusicElement) {
         backgroundMusicElement.volume = 0.3;
@@ -591,7 +614,6 @@ function setupAudio() {
     }, { once: true });
 }
 
-// Setup game audio controls
 function setupGameAudioControls() {
     const musicToggle = document.getElementById('musicToggle');
     const sfxToggle = document.getElementById('sfxToggle');
@@ -624,7 +646,6 @@ function setupGameAudioControls() {
     });
 }
 
-// Update game button states
 function updateGameButtonStates() {
     const musicToggle = document.getElementById('musicToggle');
     const sfxToggle = document.getElementById('sfxToggle');
@@ -649,7 +670,6 @@ function updateGameButtonStates() {
     }
 }
 
-// Play pop sound
 function playPopSound() {
     if (!soundEnabled) return;
     
@@ -663,7 +683,6 @@ function playPopSound() {
     }
 }
 
-// Generate pop sound
 function playGeneratedPop() {
     if (!audioContext || !soundEnabled) return;
     
@@ -688,7 +707,6 @@ function playGeneratedPop() {
     }
 }
 
-// Create initial board
 function createBoard() {
     for (let row = 0; row < GRID_SIZE; row++) {
         board[row] = [];
@@ -698,12 +716,10 @@ function createBoard() {
     }
 }
 
-// Get random fruit
 function getRandomFruit() {
     return FRUITS[Math.floor(Math.random() * FRUITS.length)];
 }
 
-// Render board
 function renderBoard() {
     const gameBoard = document.getElementById('gameBoard');
     gameBoard.innerHTML = '';
@@ -720,7 +736,6 @@ function renderBoard() {
     }
 }
 
-// Setup swipe listeners
 function setupSwipeListeners() {
     const gameBoard = document.getElementById('gameBoard');
     
