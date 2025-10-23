@@ -12,6 +12,7 @@ let isProcessing = false;
 let soundEnabled = true;
 let musicEnabled = true;
 let customBackgroundData = null;
+let transparentMode = false;
 
 // Swipe detection variables
 let touchStartX = 0;
@@ -93,12 +94,25 @@ function saveBackgroundSettings(bgType, customData = null) {
     }
 }
 
+// Enable transparent mode
+function enableTransparentMode() {
+    transparentMode = true;
+    document.getElementById('mainBody').classList.add('transparent-mode');
+}
+
+// Disable transparent mode
+function disableTransparentMode() {
+    transparentMode = false;
+    document.getElementById('mainBody').classList.remove('transparent-mode');
+}
+
 // Select background
 function selectBackground(bgType) {
     const body = document.getElementById('mainBody');
     
-    // Remove all background classes
+    // Remove all background classes and transparent mode
     body.className = '';
+    disableTransparentMode();
     
     // Apply selected background
     body.classList.add('bg-' + bgType);
@@ -117,6 +131,12 @@ function setupCustomBackgroundUpload() {
         const file = e.target.files[0];
         
         if (file && file.type.startsWith('image/')) {
+            // Check file size (limit to 10MB for performance)
+            if (file.size > 10 * 1024 * 1024) {
+                alert('Image is too large. Please choose an image smaller than 10MB.');
+                return;
+            }
+            
             const reader = new FileReader();
             
             reader.onload = function(event) {
@@ -153,6 +173,9 @@ function applyCustomBackground() {
     body.style.backgroundAttachment = 'fixed';
     body.style.backgroundRepeat = 'no-repeat';
     
+    // Enable transparent mode with glassmorphism
+    enableTransparentMode();
+    
     saveBackgroundSettings('custom', customBackgroundData);
     
     closeBackgroundSettings();
@@ -170,6 +193,9 @@ function applyCustomBackgroundFromStorage(imageData) {
     body.style.backgroundRepeat = 'no-repeat';
     
     customBackgroundData = imageData;
+    
+    // Enable transparent mode
+    enableTransparentMode();
 }
 
 // Remove custom background
@@ -178,6 +204,9 @@ function removeCustomBackground() {
     document.getElementById('customPreview').style.display = 'none';
     document.getElementById('customBgInput').value = '';
     localStorage.removeItem('fruitMatchCustomBackground');
+    
+    // Switch to default background
+    selectBackground('default1');
 }
 
 // Open background settings
