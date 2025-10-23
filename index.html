@@ -7,7 +7,6 @@
     
     <!-- Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="style.css">
@@ -15,30 +14,30 @@
 <body id="mainBody">
     <!-- Mode Selection Screen -->
     <div class="mode-selection" id="modeSelection">
-        <div class="mode-container" id="modeContainer">
+        <div class="glass-container" id="modeContainer">
             <h1><span class="material-icons-outlined md-48">sports_esports</span> Fruit Match</h1>
             <p class="subtitle">Choose Your Game Mode</p>
             
             <div class="settings-row">
                 <div class="audio-controls-menu">
-                    <button id="musicToggleMenu" class="audio-btn material-btn" title="Toggle Music">
+                    <button id="musicToggleMenu" class="glass-btn ripple" title="Toggle Music">
                         <span class="material-icons-outlined">music_note</span>
                         <span>Music</span>
                     </button>
-                    <button id="sfxToggleMenu" class="audio-btn material-btn" title="Toggle Sound Effects">
+                    <button id="sfxToggleMenu" class="glass-btn ripple" title="Toggle Sound Effects">
                         <span class="material-icons-outlined">volume_up</span>
                         <span>Effects</span>
                     </button>
                 </div>
                 
-                <button id="bgSettingsBtn" class="settings-btn material-btn" onclick="openBackgroundSettings()">
+                <button id="bgSettingsBtn" class="glass-btn ripple" onclick="openBackgroundSettings()">
                     <span class="material-icons-outlined">palette</span>
                     <span>Theme</span>
                 </button>
             </div>
             
             <div class="mode-cards">
-                <div class="mode-card material-card" onclick="selectMode('level')">
+                <div class="glass-card ripple" onclick="selectMode('level')">
                     <span class="material-icons-outlined mode-icon">flag</span>
                     <h2>Level Mode</h2>
                     <p>Progress through challenging levels with limited moves</p>
@@ -48,7 +47,7 @@
                     </div>
                 </div>
                 
-                <div class="mode-card material-card" onclick="selectMode('infinite')">
+                <div class="glass-card ripple" onclick="selectMode('infinite')">
                     <span class="material-icons-outlined mode-icon">all_inclusive</span>
                     <h2>Infinite Mode</h2>
                     <p>Play endlessly and beat your high score</p>
@@ -62,16 +61,16 @@
     </div>
 
     <!-- Game Screen -->
-    <div class="game-container" id="gameContainer" style="display: none;">
+    <div class="game-container glass-container" id="gameContainer" style="display: none;">
         <div class="game-header">
-            <button class="back-btn material-btn" onclick="backToMenu()">
+            <button class="glass-btn ripple" onclick="backToMenu()">
                 <span class="material-icons-outlined">arrow_back</span>
                 <span>Menu</span>
             </button>
             <h1 id="gameTitle"><span class="material-icons-outlined">sports_esports</span> Fruit Match</h1>
         </div>
         
-        <div class="score-board material-surface">
+        <div class="score-board glass-surface">
             <div class="score-item">
                 <span class="material-icons-outlined score-icon">analytics</span>
                 <div class="score-label">Score</div>
@@ -100,24 +99,24 @@
         </div>
 
         <div class="audio-controls">
-            <button id="musicToggle" class="audio-btn material-btn" title="Toggle Music">
+            <button id="musicToggle" class="glass-btn ripple" title="Toggle Music">
                 <span class="material-icons-outlined icon">music_note</span>
                 <span class="label">Music</span>
             </button>
-            <button id="sfxToggle" class="audio-btn material-btn" title="Toggle Sound Effects">
+            <button id="sfxToggle" class="glass-btn ripple" title="Toggle Sound Effects">
                 <span class="material-icons-outlined icon">volume_up</span>
                 <span class="label">Effects</span>
             </button>
         </div>
 
-        <div class="game-board material-surface" id="gameBoard"></div>
+        <div class="game-board glass-surface" id="gameBoard"></div>
 
         <div class="buttons">
-            <button class="material-btn" onclick="resetGame()">
+            <button class="glass-btn ripple" onclick="resetGame()">
                 <span class="material-icons-outlined">refresh</span>
                 <span>Restart</span>
             </button>
-            <button class="material-btn" onclick="shuffle()">
+            <button class="glass-btn ripple" onclick="shuffle()">
                 <span class="material-icons-outlined">shuffle</span>
                 <span>Shuffle</span>
             </button>
@@ -130,105 +129,138 @@
 
     <!-- Background Settings Modal -->
     <div class="modal" id="backgroundModal">
-        <div class="modal-content background-settings material-surface">
-            <h2><span class="material-icons-outlined">palette</span> Theme Settings</h2>
-            
-            <div class="bg-section">
-                <h3><span class="material-icons-outlined">color_lens</span> Default Themes</h3>
-                <div class="bg-grid">
-                    <div class="bg-option material-card" onclick="selectBackground('default1')">
-                        <div class="bg-preview bg-default1"></div>
-                        <p>Purple</p>
-                    </div>
-                    <div class="bg-option material-card" onclick="selectBackground('default2')">
-                        <div class="bg-preview bg-default2"></div>
-                        <p>Orange</p>
-                    </div>
-                    <div class="bg-option material-card" onclick="selectBackground('default3')">
-                        <div class="bg-preview bg-default3"></div>
-                        <p>Blue</p>
-                    </div>
-                    <div class="bg-option material-card" onclick="selectBackground('default4')">
-                        <div class="bg-preview bg-default4"></div>
-                        <p>Green</p>
-                    </div>
-                    <div class="bg-option material-card" onclick="selectBackground('default5')">
-                        <div class="bg-preview bg-default5"></div>
-                        <p>AMOLED</p>
-                    </div>
-                </div>
+        <div class="modal-overlay" onclick="closeBackgroundSettings()"></div>
+        <div class="modal-content glass-container">
+            <div class="modal-header">
+                <h2><span class="material-icons-outlined">palette</span> Theme Settings</h2>
+                <button class="close-btn ripple" onclick="closeBackgroundSettings()">
+                    <span class="material-icons-outlined">close</span>
+                </button>
             </div>
             
-            <div class="bg-section">
-                <h3><span class="material-icons-outlined">image</span> Custom Background</h3>
-                <p class="bg-info">Upload your own image (up to 4K resolution)</p>
-                <p class="bg-info-detail"><span class="material-icons-outlined tiny">auto_awesome</span> Auto-adaptive colors & transparent UI</p>
-                <div class="custom-upload">
-                    <input type="file" id="customBgInput" accept="image/*" style="display: none;">
-                    <button class="upload-btn material-btn" onclick="document.getElementById('customBgInput').click()">
-                        <span class="material-icons-outlined">add_photo_alternate</span>
-                        <span>Choose Image</span>
+            <div class="modal-body">
+                <!-- Default Themes Tab -->
+                <div class="theme-section active" id="defaultThemesSection">
+                    <h3><span class="material-icons-outlined">color_lens</span> Default Themes</h3>
+                    <div class="theme-grid">
+                        <div class="theme-option glass-card ripple" onclick="selectBackground('default1')">
+                            <div class="theme-preview bg-default1"></div>
+                            <p>Purple Dream</p>
+                        </div>
+                        <div class="theme-option glass-card ripple" onclick="selectBackground('default2')">
+                            <div class="theme-preview bg-default2"></div>
+                            <p>Sunset Glow</p>
+                        </div>
+                        <div class="theme-option glass-card ripple" onclick="selectBackground('default3')">
+                            <div class="theme-preview bg-default3"></div>
+                            <p>Ocean Blue</p>
+                        </div>
+                        <div class="theme-option glass-card ripple" onclick="selectBackground('default4')">
+                            <div class="theme-preview bg-default4"></div>
+                            <p>Forest Green</p>
+                        </div>
+                        <div class="theme-option glass-card ripple" onclick="selectBackground('default5')">
+                            <div class="theme-preview bg-default5"></div>
+                            <p>AMOLED Dark</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Custom Background Tab -->
+                <div class="theme-section">
+                    <h3><span class="material-icons-outlined">add_photo_alternate</span> Custom Wallpaper</h3>
+                    <button class="upload-trigger-btn glass-btn ripple" onclick="openCustomBackgroundUpload()">
+                        <span class="material-icons-outlined">upload</span>
+                        <span>Upload Custom Image</span>
                     </button>
-                    <div id="customPreview" class="custom-preview material-surface" style="display: none;">
-                        <img id="customPreviewImg" alt="Preview">
-                        <div class="color-palette-section">
-                            <p class="palette-title"><span class="material-icons-outlined tiny">palette</span> Tap a color to apply theme</p>
-                            <div id="colorPalette" class="color-palette"></div>
-                        </div>
-                        <div class="preview-actions">
-                            <button class="apply-btn material-btn" onclick="applyCustomBackground()">
-                                <span class="material-icons-outlined">check</span>
-                                <span>Apply</span>
-                            </button>
-                            <button class="remove-btn material-btn" onclick="removeCustomBackground()">
-                                <span class="material-icons-outlined">close</span>
-                                <span>Remove</span>
-                            </button>
-                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Background Upload Modal -->
+    <div class="modal" id="customUploadModal">
+        <div class="modal-overlay" onclick="closeCustomUpload()"></div>
+        <div class="modal-content glass-container custom-upload-modal">
+            <div class="modal-header">
+                <h2><span class="material-icons-outlined">image</span> Custom Wallpaper</h2>
+                <button class="close-btn ripple" onclick="closeCustomUpload()">
+                    <span class="material-icons-outlined">close</span>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="upload-area" id="uploadArea">
+                    <input type="file" id="customBgInput" accept="image/*" style="display: none;">
+                    <div class="upload-placeholder" onclick="document.getElementById('customBgInput').click()">
+                        <span class="material-icons-outlined upload-icon">add_photo_alternate</span>
+                        <p>Tap to select image</p>
+                        <span class="upload-hint">Supports up to 4K resolution</span>
+                    </div>
+                </div>
+
+                <!-- Preview and Color Palette -->
+                <div id="imagePreviewSection" class="image-preview-section" style="display: none;">
+                    <div class="preview-image-container">
+                        <img id="previewImage" alt="Preview">
+                    </div>
+                    
+                    <div class="color-palette-wrapper glass-surface">
+                        <h4><span class="material-icons-outlined tiny">palette</span> Tap a color to set theme</h4>
+                        <div id="colorPaletteGrid" class="color-palette-grid"></div>
+                    </div>
+
+                    <div class="upload-actions">
+                        <button class="glass-btn ripple apply-wallpaper-btn" onclick="applyCustomWallpaper()">
+                            <span class="material-icons-outlined">check</span>
+                            <span>Apply Wallpaper</span>
+                        </button>
+                        <button class="glass-btn ripple remove-wallpaper-btn" onclick="removeCustomWallpaper()">
+                            <span class="material-icons-outlined">delete</span>
+                            <span>Remove</span>
+                        </button>
                     </div>
                 </div>
             </div>
-            
-            <button class="modal-btn material-btn" onclick="closeBackgroundSettings()">Close</button>
         </div>
     </div>
 
     <!-- Level Complete Modal -->
     <div class="modal" id="levelCompleteModal">
-        <div class="modal-content material-surface">
+        <div class="modal-overlay"></div>
+        <div class="modal-content glass-container celebration-modal">
             <span class="material-icons-outlined celebration-icon">emoji_events</span>
             <h2>Level Complete!</h2>
             <p class="modal-score">Score: <span id="modalScore">0</span></p>
             <p class="modal-level">Level <span id="modalLevel">1</span> Completed</p>
-            <button class="modal-btn material-btn" onclick="nextLevel()">
+            <button class="glass-btn ripple full-width" onclick="nextLevel()">
                 <span>Next Level</span>
                 <span class="material-icons-outlined">arrow_forward</span>
             </button>
-            <button class="modal-btn secondary material-btn" onclick="backToMenu()">Menu</button>
+            <button class="glass-btn ripple secondary full-width" onclick="backToMenu()">Menu</button>
         </div>
     </div>
 
     <!-- Game Over Modal -->
     <div class="modal" id="gameOverModal">
-        <div class="modal-content material-surface">
+        <div class="modal-overlay"></div>
+        <div class="modal-content glass-container">
             <span class="material-icons-outlined gameover-icon">sentiment_dissatisfied</span>
             <h2>Game Over</h2>
             <p class="modal-score">Final Score: <span id="finalScore">0</span></p>
             <p class="modal-message" id="gameOverMessage"></p>
-            <button class="modal-btn material-btn" onclick="resetGame()">Try Again</button>
-            <button class="modal-btn secondary material-btn" onclick="backToMenu()">Menu</button>
+            <button class="glass-btn ripple full-width" onclick="resetGame()">Try Again</button>
+            <button class="glass-btn ripple secondary full-width" onclick="backToMenu()">Menu</button>
         </div>
     </div>
 
     <!-- Hidden audio elements -->
     <audio id="popSound" preload="auto">
         <source src="pop.mp3" type="audio/mpeg">
-        <source src="pop.ogg" type="audio/ogg">
     </audio>
 
     <audio id="backgroundMusic" loop preload="auto">
         <source src="background-music.mp3" type="audio/mpeg">
-        <source src="background-music.ogg" type="audio/ogg">
     </audio>
 
     <script src="script.js"></script>
