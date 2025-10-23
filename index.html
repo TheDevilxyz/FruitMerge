@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fruit Match Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body id="mainBody">
+    <!-- Mode Selection Screen -->
+    <div class="mode-selection" id="modeSelection">
+        <div class="mode-container">
+            <h1>🍓 Fruit Match 🍊</h1>
+            <p class="subtitle">Choose Your Game Mode</p>
+            
+            <div class="settings-row">
+                <div class="audio-controls-menu">
+                    <button id="musicToggleMenu" class="audio-btn" title="Toggle Music">🎵 Music</button>
+                    <button id="sfxToggleMenu" class="audio-btn" title="Toggle Sound Effects">🔊 Effects</button>
+                </div>
+                
+                <button id="bgSettingsBtn" class="settings-btn" onclick="openBackgroundSettings()">
+                    🎨 Background
+                </button>
+            </div>
+            
+            <div class="mode-cards">
+                <div class="mode-card" onclick="selectMode('level')">
+                    <div class="mode-icon">🎯</div>
+                    <h2>Level Mode</h2>
+                    <p>Progress through challenging levels with limited moves</p>
+                    <div class="mode-stats">
+                        <span>Current Level: <strong id="currentLevelDisplay">1</strong></span>
+                    </div>
+                </div>
+                
+                <div class="mode-card" onclick="selectMode('infinite')">
+                    <div class="mode-icon">♾️</div>
+                    <h2>Infinite Mode</h2>
+                    <p>Play endlessly and beat your high score</p>
+                    <div class="mode-stats">
+                        <span>High Score: <strong id="highScoreDisplay">0</strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div class="game-container" id="gameContainer" style="display: none;">
+        <div class="game-header">
+            <button class="back-btn" onclick="backToMenu()">← Menu</button>
+            <h1 id="gameTitle">🍓 Fruit Match 🍊</h1>
+        </div>
+        
+        <div class="score-board">
+            <div class="score-item">
+                <div class="score-label">Score</div>
+                <div class="score-value" id="score">0</div>
+            </div>
+            <div class="score-item" id="movesContainer">
+                <div class="score-label">Moves</div>
+                <div class="score-value" id="moves">20</div>
+            </div>
+            <div class="score-item" id="levelContainer" style="display: none;">
+                <div class="score-label">Level</div>
+                <div class="score-value" id="level">1</div>
+            </div>
+            <div class="score-item" id="targetContainer" style="display: none;">
+                <div class="score-label">Target</div>
+                <div class="score-value" id="target">500</div>
+            </div>
+            <div class="score-item" id="highScoreContainer" style="display: none;">
+                <div class="score-label">Best</div>
+                <div class="score-value" id="highScore">0</div>
+            </div>
+        </div>
+
+        <div class="audio-controls">
+            <button id="musicToggle" class="audio-btn music-btn" title="Toggle Music">
+                <span class="icon">🎵</span>
+                <span class="label">Music</span>
+            </button>
+            <button id="sfxToggle" class="audio-btn sfx-btn" title="Toggle Sound Effects">
+                <span class="icon">🔊</span>
+                <span class="label">Effects</span>
+            </button>
+        </div>
+
+        <div class="game-board" id="gameBoard"></div>
+
+        <div class="buttons">
+            <button onclick="resetGame()">🔄 Restart</button>
+            <button onclick="shuffle()">🔀 Shuffle</button>
+        </div>
+
+        <div class="message" id="message">Swipe to match fruits!</div>
+    </div>
+
+    <!-- Background Settings Modal -->
+    <div class="modal" id="backgroundModal">
+        <div class="modal-content background-settings">
+            <h2>🎨 Background Settings</h2>
+            
+            <div class="bg-section">
+                <h3>Default Backgrounds</h3>
+                <div class="bg-grid">
+                    <div class="bg-option" onclick="selectBackground('default1')">
+                        <div class="bg-preview bg-default1"></div>
+                        <p>Gradient Purple</p>
+                    </div>
+                    <div class="bg-option" onclick="selectBackground('default2')">
+                        <div class="bg-preview bg-default2"></div>
+                        <p>Sunset Orange</p>
+                    </div>
+                    <div class="bg-option" onclick="selectBackground('default3')">
+                        <div class="bg-preview bg-default3"></div>
+                        <p>Ocean Blue</p>
+                    </div>
+                    <div class="bg-option" onclick="selectBackground('default4')">
+                        <div class="bg-preview bg-default4"></div>
+                        <p>Forest Green</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-section">
+                <h3>Custom Background</h3>
+                <p class="bg-info">Upload your own image (supports up to 4K resolution)</p>
+                <div class="custom-upload">
+                    <input type="file" id="customBgInput" accept="image/*" style="display: none;">
+                    <button class="upload-btn" onclick="document.getElementById('customBgInput').click()">
+                        📁 Choose Image
+                    </button>
+                    <div id="customPreview" class="custom-preview" style="display: none;">
+                        <img id="customPreviewImg" alt="Preview">
+                        <button class="apply-btn" onclick="applyCustomBackground()">✓ Apply</button>
+                        <button class="remove-btn" onclick="removeCustomBackground()">✕ Remove</button>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="modal-btn" onclick="closeBackgroundSettings()">Close</button>
+        </div>
+    </div>
+
+    <!-- Level Complete Modal -->
+    <div class="modal" id="levelCompleteModal">
+        <div class="modal-content">
+            <h2>🎉 Level Complete!</h2>
+            <p class="modal-score">Score: <span id="modalScore">0</span></p>
+            <p class="modal-level">Level <span id="modalLevel">1</span> Completed</p>
+            <button class="modal-btn" onclick="nextLevel()">Next Level →</button>
+            <button class="modal-btn secondary" onclick="backToMenu()">Menu</button>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div class="modal" id="gameOverModal">
+        <div class="modal-content">
+            <h2>Game Over</h2>
+            <p class="modal-score">Final Score: <span id="finalScore">0</span></p>
+            <p class="modal-message" id="gameOverMessage"></p>
+            <button class="modal-btn" onclick="resetGame()">Try Again</button>
+            <button class="modal-btn secondary" onclick="backToMenu()">Menu</button>
+        </div>
+    </div>
+
+    <!-- Hidden audio elements -->
+    <audio id="popSound" preload="auto">
+        <source src="pop.mp3" type="audio/mpeg">
+        <source src="pop.ogg" type="audio/ogg">
+    </audio>
+
+    <audio id="backgroundMusic" loop preload="auto">
+        <source src="background-music.mp3" type="audio/mpeg">
+        <source src="background-music.ogg" type="audio/ogg">
+    </audio>
+
+    <script src="script.js"></script>
+</body>
+</html>
